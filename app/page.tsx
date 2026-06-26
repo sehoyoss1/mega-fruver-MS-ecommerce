@@ -5,7 +5,7 @@ import Link from "next/link"
 import SearchButton from "../components/SearchButton"
 import SidePromos from "../components/SidePromos"
 import PromoBanner from "../components/PromoBanner"
-import LogoutButton from "../components/LogoutButton"
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const productos = await prisma.product.findMany({
