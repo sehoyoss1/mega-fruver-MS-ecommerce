@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Usaremos Supabase (PostgreSQL)
+
+}
+
+// ----------------------------------------------------
+// ENUMS (Opciones fijas para nuestras tablas)
+// ----------------------------------------------------
+
+enum MeasureUnit {
+  POUND   // Libras
+  KILO    // Kilos
+  UNIT    // Unidades
+}
+
+enum OrderStatus {
+  PENDING      // Recibido / Pendiente
+  PREPARING    // En preparación
+  ON_THE_WAY   // En camino (Domiciliario)
+  DELIVERED    // Entregado
+  CANCELLED    // Cancelado
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+// ----------------------------------------------------
+// TABLAS DEL NEGOCIO
+// ----------------------------------------------------
+
+// Modelo para los usuarios del sistema (Tú y tus empleados)
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String   // Aquí guardaremos la contraseña encriptada
+  role      Role     @default(EMPLOYEE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    // Ej: "Frutas", "Verduras", "Hierbas", "Granos"
+  products Product[]
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String      // Ej: "Tomate Chonto"
+  description String?     
+  price       Float       // Precio actual
+  image       String?     // URL de la foto
+  measureUnit MeasureUnit @default(UNIT) // Selector inteligente
+  isAvailable Boolean     @default(true) // Interruptor rápido de "Agotado"
+  stock       Float?      // Opcional por si quieres llevar conteo exacto
+
+  // --- LO NUEVO PARA LAS SECCIONES DE LA TIENDA ---
+  isOffer     Boolean     @default(false) // Interruptor: ¿Es oferta del día?
+  isCommon    Boolean     @default(false) // Interruptor: ¿Es producto común/más vendido?
+
+  // Relación: Un producto pertenece a una categoría
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     Int         @default(autoincrement())
+  customerName    String
+  customerPhone   String      // Para el WhatsApp
+  customerAddress String      // Para saber el costo del domicilio
+  total           Float       // Subtotal de los productos
+  deliveryCost    Float?      // Costo del domicilio (Queda nulo hasta que lo confirmes)
+  status          OrderStatus @default(PENDING) // Para moverlo en el tablero
+  createdAt       DateTime    @default(now())
+  
+  // Relación: Un pedido tiene muchos productos por dentro
+  items           OrderItem[]
+}
+
+// Esta tabla es el puente que guarda QUÉ compró el cliente en ese pedido
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Float   // Puede ser 1.5 kilos, por eso usamos Float en vez de Int
+  price     Float   // Guardamos el precio al momento de la compra
+  
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+}
