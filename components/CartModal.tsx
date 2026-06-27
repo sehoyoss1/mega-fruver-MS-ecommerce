@@ -15,7 +15,6 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
   const [barrio, setBarrio] = useState("")
   const [nota, setNota] = useState("")
   
-  // NUEVO: Estado para saber si se está enviando a la base de datos
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -29,17 +28,14 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
     barrio.trim() !== "" && 
     terminosAceptados;
 
-  // NUEVO: Función asíncrona que primero guarda en BD y luego abre WhatsApp
   const enviarPedidoWhatsApp = async () => {
     if (items.length === 0 || !formularioValido || isSubmitting) return
 
-    setIsSubmitting(true) // Bloqueamos el botón temporalmente
+    setIsSubmitting(true)
 
     try {
-      // 1. Construimos la dirección completa para el tablero
       const direccionCompleta = `${direccion} (Barrio: ${barrio}) ${nota ? `- Nota: ${nota}` : ''}`
 
-      // 2. GUARDAMOS EN LA BASE DE DATOS LLAMANDO AL "PUENTE"
       const response = await fetch('/api/pedidos', {
         method: 'POST',
         headers: {
@@ -58,7 +54,6 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
         throw new Error('Error guardando en la base de datos')
       }
 
-      // 3. SE GUARDÓ BIEN: Ahora sí, armamos el mensaje de WhatsApp y lo abrimos
       const telefonoVentas = "573013459187"
       let mensaje = "👋 ¡Hola Mega Fruver! Quisiera realizar el siguiente pedido:\n\n"
       items.forEach((item) => {
@@ -76,15 +71,11 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
       const url = `https://wa.me/${telefonoVentas}?text=${encodeURIComponent(mensaje)}`
       window.open(url, '_blank')
       
-      // Opcional: Si quieres que el carrito se vacíe solo después de pedir, descomenta esto:
-      // clearCart()
-      // onClose()
-
     } catch (error) {
       console.error("Error al procesar el pedido:", error)
       alert("Hubo un pequeño error procesando tu pedido, por favor intenta darle a Enviar de nuevo.")
     } finally {
-      setIsSubmitting(false) // Desbloqueamos el botón
+      setIsSubmitting(false)
     }
   }
 
@@ -92,9 +83,8 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
 
   return createPortal(
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity" style={{ zIndex: 99999 }}>
-      <div className="bg-white w-full max-w-lg rounded-[2rem] p-6 md:p-8 shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-lg rounded-[2rem] p-5 md:p-8 shadow-2xl flex flex-col max-h-[95vh] md:max-h-[90vh]">
         
-        {/* Cabecera */}
         <div className="flex justify-between items-center mb-4 shrink-0">
           <h2 className="text-2xl font-black text-gray-900 tracking-tight">Tu Pedido 🛒</h2>
           <button onClick={clearCart} className="text-sm text-red-500 font-bold hover:bg-red-50 py-1.5 px-3 rounded-xl transition-colors">
@@ -102,7 +92,6 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
           </button>
         </div>
         
-        {/* ZONA SCROLLEABLE */}
         <div className="overflow-y-auto pr-2 mb-4 flex-grow custom-scrollbar space-y-5">
           
           <div className="space-y-3">
@@ -165,43 +154,44 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
               </div>
             </div>
           )}
+
+          {items.length > 0 && (
+            <div className={`p-4 rounded-3xl border-2 transition-all duration-300 mt-2 ${
+              terminosAceptados 
+                ? "bg-mf-light/50 border-mf-green shadow-[0_0_15px_rgba(34,197,94,0.15)]" 
+                : "bg-gray-50 border-gray-200"
+            }`}>
+              <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => setTerminosAceptados(!terminosAceptados)}>
+                <span className={`font-bold transition-colors ${terminosAceptados ? "text-mf-green" : "text-gray-700"}`}>
+                  Aceptar condiciones del servicio
+                </span>
+                <div className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 ${terminosAceptados ? 'bg-mf-green' : 'bg-gray-300'}`}>
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${terminosAceptados ? 'translate-x-6' : 'translate-x-1'}`} />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${terminosAceptados ? "bg-green-100" : "bg-gray-200"}`}>⚖️</div>
+                  <p className="text-xs text-gray-600 leading-tight">El precio varía <strong className="text-gray-900">+/- 1000 COP</strong> por peso exacto.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${terminosAceptados ? "bg-green-100" : "bg-gray-200"}`}>🛵</div>
+                  <p className="text-xs text-gray-600 leading-tight">El domicilio se confirmará directamente contigo.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${terminosAceptados ? "bg-green-100" : "bg-gray-200"}`}>⏱️</div>
+                  <p className="text-xs text-gray-600 leading-tight">Entrega estimada entre <strong className="text-gray-900">30 a 90 minutos</strong>.</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* --- PANEL FIJO INFERIOR --- */}
-        <div className="shrink-0 mt-auto">
-          <div className="flex justify-between items-end border-t border-gray-100 pt-5 mb-5">
+        <div className="shrink-0 mt-auto bg-white pt-2">
+          <div className="flex justify-between items-end border-t border-gray-100 pt-4 mb-4">
             <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total aprox.</span>
             <span className="text-4xl font-black text-mf-green leading-none">${total}</span>
-          </div>
-
-          <div className={`p-4 rounded-3xl border-2 transition-all duration-300 mb-5 ${
-            terminosAceptados 
-              ? "bg-mf-light/50 border-mf-green shadow-[0_0_15px_rgba(34,197,94,0.15)]" 
-              : "bg-gray-50 border-gray-200"
-          }`}>
-            <div className="flex items-center justify-between mb-3 cursor-pointer" onClick={() => setTerminosAceptados(!terminosAceptados)}>
-              <span className={`font-bold transition-colors ${terminosAceptados ? "text-mf-green" : "text-gray-700"}`}>
-                Aceptar condiciones del servicio
-              </span>
-              <div className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 ${terminosAceptados ? 'bg-mf-green' : 'bg-gray-300'}`}>
-                <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${terminosAceptados ? 'translate-x-6' : 'translate-x-1'}`} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${terminosAceptados ? "bg-green-100" : "bg-gray-200"}`}>⚖️</div>
-                <p className="text-xs text-gray-600 leading-tight">El precio varía <strong className="text-gray-900">+/- 1000 COP</strong> por peso exacto.</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${terminosAceptados ? "bg-green-100" : "bg-gray-200"}`}>🛵</div>
-                <p className="text-xs text-gray-600 leading-tight">El domicilio se confirmará directamente contigo.</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${terminosAceptados ? "bg-green-100" : "bg-gray-200"}`}>⏱️</div>
-                <p className="text-xs text-gray-600 leading-tight">Entrega estimada entre <strong className="text-gray-900">30 a 90 minutos</strong>.</p>
-              </div>
-            </div>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -214,7 +204,6 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
               }`}
             >
-              {/* Cambia el texto si se está guardando */}
               {isSubmitting ? "Procesando... ⏳" : formularioValido ? "Enviar pedido a WhatsApp 🚀" : "Llena los datos para continuar"}
             </button>
             
