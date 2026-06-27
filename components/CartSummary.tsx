@@ -1,12 +1,18 @@
 "use client"
 
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { useCartStore } from "../store/cartStore"
-import CartModal from "./CartModal" // Importamos el modal que creamos
+import CartModal from "./CartModal"
 
 export default function CartSummary() {
+  const pathname = usePathname()
   const { items, total } = useCartStore()
-  const [isModalOpen, setIsModalOpen] = useState(false) // Esto es lo que faltaba
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  if (pathname.includes('/admin') || pathname.includes('/login')) {
+    return null
+  }
 
   if (items.length === 0) return null
 
@@ -27,7 +33,6 @@ export default function CartSummary() {
             </div>
           </div>
           
-          {/* Al hacer click aquí, abrimos el modal */}
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-mf-green hover:bg-green-600 active:scale-95 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2"
@@ -38,7 +43,6 @@ export default function CartSummary() {
         </div>
       </div>
 
-      {/* Aquí vive el modal esperando a que le den click */}
       <CartModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   )

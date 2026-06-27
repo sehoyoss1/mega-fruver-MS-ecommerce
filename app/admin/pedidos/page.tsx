@@ -1,6 +1,7 @@
 import { prisma } from "../../../lib/prisma"
 import PedidoCard from "../../../components/PedidoCard" // Importamos la nueva tarjeta viva
 import LogoutButton from "../../../components/LogoutButton" // <-- 1. Importamos el botón de salir
+export const dynamic = 'force-dynamic';
 
 export default async function PedidosPage() {
   const hace90Minutos = new Date(Date.now() - 90 * 60 * 1000)
