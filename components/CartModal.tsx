@@ -28,7 +28,7 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
     barrio.trim() !== "" && 
     terminosAceptados;
 
-  const enviarPedidoWhatsApp = async () => {
+const enviarPedidoWhatsApp = async () => {
     if (items.length === 0 || !formularioValido || isSubmitting) return
 
     setIsSubmitting(true)
@@ -70,6 +70,10 @@ export default function CartModal({ isOpen, onClose }: { isOpen: boolean, onClos
 
       const url = `https://wa.me/${telefonoVentas}?text=${encodeURIComponent(mensaje)}`
       window.open(url, '_blank')
+      
+      clearCart()
+      onClose()
+      alert("¡Tu pedido se generó con éxito! Revisa tu WhatsApp para continuar.")
       
     } catch (error) {
       console.error("Error al procesar el pedido:", error)

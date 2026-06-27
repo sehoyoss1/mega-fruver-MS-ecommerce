@@ -10,7 +10,8 @@ export default function CartSummary() {
   const { items, total } = useCartStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  if (pathname.includes('/admin') || pathname.includes('/login')) {
+// Condición blindada: Si la ruta ES /login o EMPIEZA por /admin, muere la barra.
+  if (pathname === '/login' || pathname.startsWith('/admin')) {
     return null
   }
 
